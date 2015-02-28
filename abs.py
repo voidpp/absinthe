@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import re
 import os
 import sys
 import argparse
@@ -25,18 +26,29 @@ except Exception as e:
 config_raw = config.raw()
 
 parser = argparse.ArgumentParser()
-parser.add_argument('file', type = argparse.FileType('r')) #, nargs='+'
+parser.add_argument('files', type = str, nargs='+')
 parser.add_argument('-p', '--path_base', type = str, choices = config_raw['paths'].keys(), default = config_raw['default-path'])
 parser.add_argument('-v', '--verbose', action = 'store_true')
 args = parser.parse_args()
 
 client = pyjsonrpc.HttpClient(url = "http://%(host)s:%(port)d/jsonrpc" % config_raw['command_server'])
 
-try:
-    response = client.open_file(args.path_base, os.path.abspath(args.file.name))
-    resp = SimpleResponse(**response)
-    if resp.code != True or args.verbose:
-        for msg in resp.message:
-            print msg
-except Exception as e:
-    print e
+for file in args.files:
+    filename = file
+    line = 0
+    line_reg = re.search('(.+):([0-9]{1,})$', filename)
+    if line_reg:
+        filename = line_reg.group(1)
+        line = line_reg.group(2)
+    if os.path.isfile(filename) is False:
+        print "File: '%s' is not exists!" % filename
+        continue
+
+    try:
+        response = client.open_file(args.path_base, os.path.abspath(filename), int(line))
+        resp = SimpleResponse(**response)
+        if resp.code != True or args.verbose:
+            for msg in resp.message:
+                print msg
+    except Exception as e:
+        print e

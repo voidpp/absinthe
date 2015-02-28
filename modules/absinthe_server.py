@@ -77,7 +77,7 @@ class SessionManager(object):
         return sessions
 
     @external_jsonrpc_command
-    def open_file(self, path_name, filename):
+    def open_file(self, path_name, filename, line):
         self.logger.debug('Open file %s in %s' % (path_name, filename))
 
         sessions = self.find_sessions(path_name)
@@ -91,7 +91,7 @@ class SessionManager(object):
 
         for session in sessions:
             file_parts = session.path.parse(filename)
-            session.client.send(Message(session.name, 'open_file', dict(filename = file_parts)))
+            session.client.send(Message(session.name, 'open_file', dict(filename = file_parts, line = line)))
             msgs.append('File open request sent to %s' % session.client.address)
 
         return SimpleResponse(True, msgs)
