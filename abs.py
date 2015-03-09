@@ -29,6 +29,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('files', type = str, nargs='+')
 parser.add_argument('-p', '--path_base', type = str, choices = config_raw['paths'].keys(), default = config_raw['default-path'])
 parser.add_argument('-v', '--verbose', action = 'store_true')
+parser.add_argument('-f', '--nofs', help = 'No set focus to editor after file open', action = 'store_true')
 args = parser.parse_args()
 
 client = pyjsonrpc.HttpClient(url = "http://%(host)s:%(port)d/jsonrpc" % config_raw['command_server'])
@@ -52,3 +53,6 @@ for file in args.files:
                 print msg
     except Exception as e:
         print e
+
+if not args.nofs:
+    client.set_focus(args.path_base)

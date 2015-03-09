@@ -3,7 +3,6 @@
 import os
 import sys
 import signal
-import subprocess
 import time
 import websocket
 
@@ -14,6 +13,7 @@ from config import Config
 from utils import FileReader
 from message import Message
 from tools.timer import Timer
+import editors
 
 class AbsintheClient():
 
@@ -56,11 +56,15 @@ class AbsintheClient():
 
             self.sessions[name] = Session(name, self.hosts[session['host']], self.editors[session['editor']], session['path'], session['remote-path'], self.logger)
 
-    def create_editors(self, editors):
+    def create_editors(self, editors_defs):
         self.logger.debug('Create editors')
         self.editors = {}
-        for name in editors:
-            self.editors[name] = Editor(name, editors[name], self.logger)
+        for name in editors_defs:
+            if not hasattr(editors, name):
+                self.logger.error('Undefined editor: %s. Skipping.' % name)
+                continue
+            TypedEditor = getattr(editors, name)
+            self.editors[name] = TypedEditor(name, editors_defs[name], self.logger)
 
     def create_hosts(self, hosts):
         self.logger.debug('Create hosts')
@@ -71,25 +75,6 @@ class AbsintheClient():
 
     def stop(self):
         pass
-
-class Editor():
-    def __init__(self, name, command_pattern, logger):
-        self.name = name
-        self.command_pattern = command_pattern
-        self.logger = logger
-
-    def open_file(self, filename, line):
-        command = []
-        data = dict(filename = filename, line = line)
-        for pattern in self.command_pattern:
-            command.append(pattern % data)
-
-        self.logger.debug('Call command to open file: %s' % command)
-
-        try:
-            subprocess.call(command)
-        except Exception as e:
-            self.logger.error('Editor command failed: %s' % e)
 
 class Host():
     def __init__(self, name, host, port, logger):
@@ -192,6 +177,9 @@ class Session():
         msg = Message(self.name, 'session_start', dict(remote_path = self.remote_path))
         self.host.send(msg)
 
+    def set_focus(self):
+        self.editor.set_focus()
+
     def open_content(self, content):
         pass
 
@@ -202,4 +190,3 @@ class Session():
         self.logger.debug('Open file: %s' % full_path)
 
         self.editor.open_file(full_path, line)
-

@@ -77,6 +77,15 @@ class SessionManager(object):
         return sessions
 
     @external_jsonrpc_command
+    def set_focus(self, path_name):
+        sessions = self.find_sessions(path_name)
+
+        for session in sessions:
+            session.client.send(Message(session.name, 'set_focus'))
+
+        return SimpleResponse(True)
+
+    @external_jsonrpc_command
     def open_file(self, path_name, filename, line):
         self.logger.debug('Open file %s in %s' % (path_name, filename))
 
