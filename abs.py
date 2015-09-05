@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 import re
 import os
@@ -52,7 +52,7 @@ for file in args.files:
             for msg in resp.message:
                 print msg
     except Exception as e:
-        print e
+        raise e
 
 if not args.nofs:
     client.set_focus(args.path_base)

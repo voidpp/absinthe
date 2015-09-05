@@ -89,19 +89,29 @@ class SessionManager(object):
     def open_file(self, path_name, filename, line):
         self.logger.debug('Open file %s in %s' % (path_name, filename))
 
-        sessions = self.find_sessions(path_name)
+        msgs = []
 
-        if len(sessions) == 0:
-            msg = 'There is no client for this path %s' % path_name
-            self.logger.warning(msg)
-            return SimpleResponse(False, [msg])
+        try:
+            sessions = self.find_sessions(path_name)
 
-        msgs = ['Session found: %s' % path_name]
+            if len(sessions) == 0:
+                msg = 'There is no client for this path %s' % path_name
+                self.logger.warning(msg)
+                return SimpleResponse(False, [msg])
 
-        for session in sessions:
-            file_parts = session.path.parse(filename)
-            session.client.send(Message(session.name, 'open_file', dict(filename = file_parts, line = line)))
-            msgs.append('File open request sent to %s' % session.client.address)
+            msgs.append('Session found: %s' % path_name)
+
+            for session in sessions:
+                file_parts = session.path.parse(filename)
+                session.client.send(Message(session.name, 'open_file', dict(filename = file_parts, line = line)))
+                msgs.append('File open request sent to %s' % session.client.address)
+
+            for msg in msgs:
+                self.logger.debug(msg)
+
+        except Exception as e:
+            self.logger.exception(e);
+            msgs.append(e);
 
         return SimpleResponse(True, msgs)
 
