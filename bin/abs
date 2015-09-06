@@ -3,22 +3,22 @@
 import re
 import os
 import sys
+import json
 import argparse
 import pyjsonrpc
 
-# realpath resolves symlinks
-root_dir = os.path.dirname(os.path.realpath(__file__))
+from absinthe.tools.config import Config
+from absinthe.tools.utils import SimpleResponse
 
-from tools.utils import extend_path
+absinthe_data_dir = os.path.join(os.path.expanduser('~'), '.absinthe')
 
-extend_path(root_dir, ['modules', 'tools'])
-
-from config import Config
-from utils import FileReader, SimpleResponse
+config_data = {}
+with open(os.path.join(absinthe_data_dir, 'config.json')) as f:
+    config_data = json.load(f)
 
 try:
-    config = Config(FileReader(), None)
-    config.load(os.path.join(root_dir, 'config', 'server.json'))
+    config = Config(None)
+    config.load(config_data['server'])
 except Exception as e:
     print "Cannot load config: " % e
     sys.exit(1)

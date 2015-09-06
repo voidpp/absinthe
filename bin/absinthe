@@ -3,30 +3,31 @@
 import os
 import sys
 import argparse
+import json
 
-root_dir = os.path.dirname(__file__)
-
-from tools.utils import extend_path
-
-extend_path(root_dir, ['modules', 'tools'])
-
-from logger import get_logger
-from config import Config
-from utils import FileReader
-from remote_process_manager import RemoteProcessManager
+from absinthe import dirs, init_data_dir
+from absinthe.tools.logger import get_logger
+from absinthe.tools.config import Config
+from absinthe.tools.remote_process_manager import RemoteProcessManager
 
 parser = argparse.ArgumentParser()
 parser.add_argument('command', type=str, choices=['start', 'stop', 'restart', 'status'])
 args = parser.parse_args()
 
+init_data_dir()
+
+config_data = {}
+with open(dirs.config_file) as f:
+    config_data = json.load(f)
+
 # init logger
-logger = get_logger(os.path.join(root_dir, 'config', 'logger.json'), 'init')
+logger = get_logger(config_data['logger'], 'init')
 logger.info("Absinthe server manager script")
 
 # init config
 try:
-    config = Config(FileReader(), logger)
-    config.load(os.path.join(root_dir, 'config', 'server.json'))
+    config = Config(logger)
+    config.load(config_data['server'])
     logger.info('Config has been successfully loaded')
 except Exception as e:
     logger.error('Exception occured during config parsing: ' + str(e))
@@ -34,9 +35,9 @@ except Exception as e:
 
 # create manager
 mgr = RemoteProcessManager(
-    ['python', os.path.join(root_dir, 'server.py')],
+    ['python', dirs.server_listener],
     config.data['command_server']['port'].value,
-    os.path.join(root_dir, 'absinthe_server.pid'),
+    os.path.join(dirs.data_dir, 'server.pid'),
     logger
 )
 command = getattr(mgr, args.command)
@@ -46,4 +47,3 @@ try:
     logger.info(response.message)
 except Exception as e:
     raise
-

@@ -4,10 +4,11 @@ import pyjsonrpc
 import json
 import os
 from geventwebsocket import WebSocketServer, WebSocketApplication, Resource
-from tools.commands import CommandRequestHandler, external_jsonrpc_command
-from message import Message
-from utils import SimpleResponse
-from remote_process_base import RemoteProcessBase
+
+from absinthe.tools.commands import CommandRequestHandler, external_jsonrpc_command
+from absinthe.message import Message
+from absinthe.tools.utils import SimpleResponse
+from absinthe.tools.remote_process_base import RemoteProcessBase
 
 # gevent socket in thread, need to patch...
 from gevent import monkey
