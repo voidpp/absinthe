@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "Absinthe",
-    version = '1.0.0',
+    version = '1.1.0',
     description = "A tiny server(-client) app to open sshfs connected files over ssh in any local editor",
     author = 'Lajos Santa',
     author_email = 'santa.lajos@coldline.hu',
